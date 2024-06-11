@@ -9,6 +9,14 @@ const projectsGrid = document.getElementById('projectsGrid');
 const projectsOptions = [
 
   { 
+    title: "Portfolios project", 
+    description: "I make portfolios to different people, so I make a lobby page to show all portfolios I made (with the client consentment of course).",
+    url: "https://lobby-portfolios.netlify.app/", 
+    image: "./assets/images/portadaProvisional.jpg",
+    sliding: [ "./assets/images/oscilations/oscilations.JPG" ]
+  },
+
+  { 
     title: "Oscilations Simulator", 
     description: "This page simulates different types of oscilations. <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript</strong>",
     url: "https://stoic-williams-c77a2f.netlify.app/", 
