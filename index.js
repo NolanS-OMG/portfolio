@@ -17,14 +17,6 @@ const projectsOptions = [
   },
 
   {
-    title: "url.shrtR",
-    description: "This is a fullStack project, is a page where you can Enter an URL and it will make it short, is a very useful tool for writing posts with links. <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript, NodeJS, Express, mongoose, MongoDB</strong>",
-    url: "https://url-shrtr-32e77c5ca9fd.herokuapp.com/",
-    image: "./assets/images/url-shrtr/url-shrtr.PNG",
-    sliding: ["./assets/images/oscilations/oscilations.JPG"]
-  },
-
-  {
     title: "TacoNomiks 🌮",
     description: "This page shows all Tacos that has been consumed any day in all different Staes of Mexico (the data is not real, is generated). <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript, Leaflet</strong>",
     url: "https://taconomiks.netlify.app/",
