@@ -17,6 +17,14 @@ const projectsOptions = [
   },
 
   {
+    title: "App ABCC/CRUD",
+    description: "This page is a Full Stack CRUD (in Spanish ABCC) of different products, with dynamic forms and restrictions to it, API calls with Fecth, and a RESTful API made by me too. <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript, NodeJS, MongoDB</strong>",
+    url: "https://aplicacionabcc.netlify.app/",
+    image: "./assets/images/abcc.PNG",
+    sliding: ["./assets/images/oscilations/oscilations.JPG"]
+  },
+
+  {
     title: "TacoNomiks 🌮",
     description: "This page shows all Tacos that has been consumed any day in all different Staes of Mexico (the data is not real, is generated). <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript, Leaflet</strong>",
     url: "https://taconomiks.netlify.app/",
