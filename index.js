@@ -9,6 +9,14 @@ const projectsGrid = document.getElementById('projectsGrid');
 const projectsOptions = [
 
   {
+    title: "Maqueta Colegio",
+    description: 'ON DEV STAGE. Project for Schools where they can have their landing page and administration functions, which includes students grades, reports, announcements, posts and fathers supervision. <br> <br> <a href="https://github.com/NolanS-OMG/colegios">Github Link</a> <br> <br> Technologies aplied: <strong>HTML, CSS, JavaScript, React, Tailwind</strong>',
+    url: "https://lobby-portfolios.netlify.app/",
+    image: "./assets/images/colegios.PNG",
+    sliding: ["./assets/images/oscilations/oscilations.JPG"]
+  },
+
+  {
     title: "Portfolios project",
     description: "I make portfolios to different people, so I make a lobby page to show all portfolios I made (with the client consentment of course).",
     url: "https://lobby-portfolios.netlify.app/",
