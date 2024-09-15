@@ -149,7 +149,7 @@ function App() {
         </article>
       </header>
 
-      <section className="lg:px-32 px-4" id="experience">
+      <section className="lg:px-32 px-4 pb-16" id="experience">
         <h4 className="text-4xl font-extrabold flex gap-3 items-center mb-8">
           <PiSuitcaseSimpleBold size={48} className="translate-y-0.5" />
           <span>Experience</span>
