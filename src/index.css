@@ -111,14 +111,14 @@ strong {
   .w-full-64 {
     width: calc(100% - 256px);
   }
-
-  .projects-half {
-    width: calc(50% - 30px);
-  }
 }
 
 @media (min-width: 768px) {
   .projects-half {
     width: calc(50% - 30px);
+  }
+
+  .projects-third {
+    width: calc(33% - 30px);
   }
 }

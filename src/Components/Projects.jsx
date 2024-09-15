@@ -1,6 +1,8 @@
 import { FaLink, FaGithub } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 
 const Projects = ({ className = "", projects = [], articleClassName = "projects-half" }) => {
+  const { t } = useTranslation();
   return (
     <div className={`${className} flex flex-wrap gap-2 justify-center`}>
       {projects.map((pro, index) => {
@@ -19,8 +21,8 @@ const Projects = ({ className = "", projects = [], articleClassName = "projects-
             </div>
             <p className="lg:text-base text-sm">{pro.description}</p>
             <div className="flex flex-wrap gap-3 text-lg lg:mt-4 my-6">
-              {pro.github && <a href={pro?.github} target="_blank" className="flex gap-2 px-4 py-2 bg1-color rounded-xl border border-gray-400 items-center transition-all duration-75 hover:duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/10"><FaGithub size={20} /><span>Go to code</span></a>}
-              {pro.page && <a href={pro?.page} target="_blank" className="flex gap-2 px-4 py-2 bg1-color rounded-xl border border-gray-400 items-center transition-all duration-75 hover:duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/10"><FaLink size={16} /><span>Go to page</span></a>}
+              {pro.github && <a href={pro?.github} target="_blank" className="flex gap-2 px-4 py-2 bg1-color rounded-xl border border-gray-400 items-center transition-all duration-75 hover:duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/10"><FaGithub size={20} /><span>{t("code")}</span></a>}
+              {pro.page && <a href={pro?.page} target="_blank" className="flex gap-2 px-4 py-2 bg1-color rounded-xl border border-gray-400 items-center transition-all duration-75 hover:duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/10"><FaLink size={16} /><span>{t("page")}</span></a>}
             </div>
           </article>
         )
