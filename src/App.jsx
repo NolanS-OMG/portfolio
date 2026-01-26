@@ -113,6 +113,22 @@ function App() {
 
   const projects_en = [
     {
+      img: "/snake_rl.PNG",
+      alt: "Snake RL AI vs Human",
+      title: "Snake RL - AI vs Human",
+      skills: ["TypeScript", "Next.js", "Python", "ONNX", "Reinforcement Learning"],
+      description: (
+        <>
+          A classic Snake game with an AI trained using <strong className="light">Reinforcement Learning (PPO algorithm)</strong> that runs entirely in the browser using ONNX Runtime Web. <br />
+          - <strong className="light">100M training steps</strong> (~1.12 days) <br />
+          - Play against the AI in VS mode <br />
+          - Mobile support with touch controls
+        </>
+      ),
+      github: "https://github.com/NolanS-OMG/ia_snake",
+      page: "https://ia-snake.vercel.app/"
+    },
+    {
       img: "/colegios.PNG",
       alt: "Landing Page Colegios",
       title: "Schools Landing/Admin",
@@ -155,6 +171,22 @@ function App() {
     },
   ];
   const projects_es = [
+    {
+      img: "/snake_rl.PNG",
+      alt: "Snake RL AI vs Human",
+      title: "Snake RL - AI vs Human",
+      skills: ["TypeScript", "Next.js", "Python", "ONNX", "Reinforcement Learning"],
+      description: (
+        <>
+          El clásico juego de Snake con una IA entrenada mediante <strong className="light">Reinforcement Learning (algoritmo PPO)</strong> que corre completamente en el navegador usando ONNX Runtime Web. <br />
+          - <strong className="light">100M pasos de entrenamiento</strong> (~1.12 días) <br />
+          - Juega contra la IA en modo VS <br />
+          - Soporte móvil con controles táctiles
+        </>
+      ),
+      github: "https://github.com/NolanS-OMG/ia_snake",
+      page: "https://ia-snake.vercel.app/"
+    },
     {
       img: "/colegios.PNG",
       alt: "Landing Page Colegios",
