@@ -25,45 +25,43 @@ function App() {
   const experience_en = [
     {
       title: "Software Developer",
-      company: "Freelancer",
-      start: "May 2024",
+      company: "Hola ELO",
+      start: "2024",
       after: "Currently",
       description: (
         <>
-          Working on <strong className="light">2 projects</strong>: <br />
-          - Private Schools landing page and administration system (stand by). <br />
-          - AI chatbot for an Event Planner company.
+          Spearheaded the development of <strong className="light">ELO HUB</strong>, an all-in-one platform for psychologists integrating AI-powered session transcription, patient chatbots, scheduling, and payment automation. <br />
+          - Improved platform scalability and reduced load times by <strong className="light">35%</strong> <br />
+          - <strong className="light">+100 users</strong> paying for the platform <br />
+          - Enhanced API response times by <strong className="light">~25%</strong> <br />
+          Tech Stack: React, TypeScript, Ruby on Rails, AWS
         </>
       ),
     },
     {
       title: "Software Developer",
       company: "Innova Solutions",
-      start: "January 2023",
-      after: "January 2024",
+      start: "2023",
+      after: "2024",
       description: (
         <>
-          I used all technologies on my hands depending on the requirements of the project
-          and the commodity of the team. <strong className="light">2 projects</strong>. <br />
-          Technologies used: <br />
-          - React, React Native, TypeScript <br />
-          - Java, Spring Boot, NodeJS, RestAPI <br />
-          - AWS, Jenkins
+          Delivered <strong className="light">2 end-to-end applications</strong> from design to deployment using React, Spring Boot, and AWS. <br />
+          - Developed reusable components that cut front-end development time by <strong className="light">30%</strong> <br />
+          - Enhanced CI/CD pipelines with Jenkins, reducing deployment errors by <strong className="light">40%</strong> <br />
+          Tech Stack: React, React Native, TypeScript, Java, Spring Boot, Node.js, AWS, Jenkins
         </>
       ),
     },
     {
       title: "Software Developer Intern",
       company: "Innova Solutions",
-      start: "June 2022",
-      after: "January 2023",
+      start: "2022",
+      after: "2023",
       description: (
         <>
-          I learned Salesforce frameworks and CRM and finished <strong className="light">one inside project</strong> of the
-          company. <br />
-          Technologies used: <br />
-          - Salesforce CRM, LWC, Apex <br />
-          - HTML / CSS / JavaScript
+          Completed an internal Salesforce project that automated data tracking and improved <strong className="light">CRM reporting efficiency by 20%</strong>. <br />
+          - Learned and applied Salesforce CRM, Apex, and Lightning Web Components <br />
+          Tech Stack: Salesforce CRM, LWC, Apex, JavaScript, HTML, CSS, Git
         </>
       ),
     },
@@ -71,43 +69,43 @@ function App() {
   const experience_es = [
     {
       title: "Software Developer",
-      company: "Freelancer",
-      start: "Mayo 2024",
-      after: "Actualmente...",
+      company: "Hola ELO",
+      start: "2024",
+      after: "Actualmente",
       description: (
         <>
-          Trabajando en <strong className="light">2 proyectos</strong>: <br />
-          - Página web para landing y administración de escuelas privadas (detenido). <br />
-          - AI chatbot para empresa de organización de eventos.
+          Lideré el desarrollo de <strong className="light">ELO HUB</strong>, una plataforma todo-en-uno para psicólogos que integra transcripción de sesiones con IA, chatbots para pacientes, agendamiento y automatización de pagos. <br />
+          - Mejoré la escalabilidad y reduje tiempos de carga en <strong className="light">35%</strong> <br />
+          - <strong className="light">+100 usuarios</strong> pagando por la plataforma <br />
+          - Mejoré tiempos de respuesta de API en <strong className="light">~25%</strong> <br />
+          Tech Stack: React, TypeScript, Ruby on Rails, AWS
         </>
       ),
     },
     {
       title: "Software Developer",
       company: "Innova Solutions",
-      start: "Enero 2023",
-      after: "Enero 2024",
+      start: "2023",
+      after: "2024",
       description: (
         <>
-          Se utilizaban las tecnologías necesarias según los requerimientos del cliente y las necesidades del equipo. <strong className="light">2 proyectos</strong>. <br />
-          Tecnologías utilizadas: <br />
-          - React, React Native, TypeScript <br />
-          - Java, Spring Boot, NodeJS, RestAPI <br />
-          - AWS, Jenkins
+          Entregué <strong className="light">2 aplicaciones end-to-end</strong> desde diseño hasta despliegue usando React, Spring Boot y AWS. <br />
+          - Desarrollé componentes reutilizables que redujeron el tiempo de desarrollo frontend en <strong className="light">30%</strong> <br />
+          - Mejoré pipelines CI/CD con Jenkins, reduciendo errores de despliegue en <strong className="light">40%</strong> <br />
+          Tech Stack: React, React Native, TypeScript, Java, Spring Boot, Node.js, AWS, Jenkins
         </>
       ),
     },
     {
       title: "Software Developer Intern",
       company: "Innova Solutions",
-      start: "Junio 2022",
-      after: "Enero 2023",
+      start: "2022",
+      after: "2023",
       description: (
         <>
-          Aprendí los frameworks de Salesforce y el uso de sus CRM además de trabajar en <strong className="light">un proyecto interno</strong> de la compañía. <br />
-          Tecnologías utilizadas: <br />
-          - Salesforce CRM, LWC, Apex <br />
-          - HTML / CSS / JavaScript
+          Completé un proyecto interno de Salesforce que automatizó el seguimiento de datos y mejoró la <strong className="light">eficiencia de reportes CRM en 20%</strong>. <br />
+          - Aprendí y apliqué Salesforce CRM, Apex y Lightning Web Components <br />
+          Tech Stack: Salesforce CRM, LWC, Apex, JavaScript, HTML, CSS, Git
         </>
       ),
     },
