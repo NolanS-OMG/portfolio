@@ -32,7 +32,7 @@ function App() {
         <>
           Spearheaded the development of <strong className="light">ELO HUB</strong>, an all-in-one platform for psychologists integrating AI-powered session transcription, patient chatbots, scheduling, and payment automation. <br />
           - Improved platform scalability and reduced load times by <strong className="light">35%</strong> <br />
-          - <strong className="light">+100 users</strong> paying for the platform <br />
+          - <strong className="light">+500 users</strong> paying for the platform <br />
           - Enhanced API response times by <strong className="light">~25%</strong> <br />
           Tech Stack: React, TypeScript, Ruby on Rails, AWS
         </>
@@ -76,7 +76,7 @@ function App() {
         <>
           Lideré el desarrollo de <strong className="light">ELO HUB</strong>, una plataforma todo-en-uno para psicólogos que integra transcripción de sesiones con IA, chatbots para pacientes, agendamiento y automatización de pagos. <br />
           - Mejoré la escalabilidad y reduje tiempos de carga en <strong className="light">35%</strong> <br />
-          - <strong className="light">+100 usuarios</strong> pagando por la plataforma <br />
+          - <strong className="light">+500 usuarios</strong> pagando por la plataforma <br />
           - Mejoré tiempos de respuesta de API en <strong className="light">~25%</strong> <br />
           Tech Stack: React, TypeScript, Ruby on Rails, AWS
         </>
