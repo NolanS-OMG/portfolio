@@ -6,7 +6,7 @@ import type {
   ChatError,
 } from '../types/chat';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 if (!API_KEY) {
@@ -18,38 +18,46 @@ const DEFAULT_HEADERS = {
   'X-API-Key': API_KEY || '',
 };
 
+interface FetchOptions extends RequestInit {
+  skipAuth?: boolean;
+}
+
 /**
  * Generic fetch wrapper with retry logic
  */
 async function fetchWithRetry<T>(
   url: string,
-  options: RequestInit = {},
+  options: FetchOptions = {},
   maxRetries = 3
 ): Promise<T> {
   let lastError: Error | null = null;
+  const { skipAuth, ...requestOptions } = options;
 
   console.log(`[chatApi] Fetching ${url}`, {
-    method: options.method || 'GET',
+    method: requestOptions.method || 'GET',
     maxRetries,
-    hasBody: !!options.body
+    hasBody: !!requestOptions.body
   });
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      const baseHeaders = skipAuth
+        ? { 'Content-Type': 'application/json' }
+        : DEFAULT_HEADERS;
+
       const fetchOptions = {
-        ...options,
+        ...requestOptions,
         headers: {
-          ...DEFAULT_HEADERS,
-          ...options.headers,
+          ...baseHeaders,
+          ...requestOptions.headers,
         },
-        credentials: 'include' as RequestCredentials, // Important for cookies
       };
 
       console.log(`[chatApi] Attempt ${attempt}/${maxRetries}`, {
         url,
         method: fetchOptions.method,
         headers: { ...fetchOptions.headers, 'X-API-Key': '***' }, // Hide API key in logs
-        body: options.body ? JSON.parse(options.body as string) : undefined
+        body: requestOptions.body ? JSON.parse(requestOptions.body as string) : undefined
       });
 
       const response = await fetch(url, fetchOptions);
@@ -106,10 +114,12 @@ async function fetchWithRetry<T>(
 
 /**
  * Check health status of the API
+ * Note: /health endpoint does NOT require X-API-Key
  */
 export async function getHealth(): Promise<HealthResponse> {
   return fetchWithRetry<HealthResponse>(`${API_BASE_URL}/api/v1/health`, {
     method: 'GET',
+    skipAuth: true,
   });
 }
 
@@ -124,23 +134,42 @@ export async function getWelcome(): Promise<WelcomeResponse> {
 
 /**
  * Send a message to the chat API
+ *
+ * IMPORTANT per API spec:
+ * - session_id must be OMITTED or null if not available (never empty string "")
+ * - message must be 1-4096 chars
+ * - language must be "en" or "es"
  */
 export async function sendMessage(
   message: string,
-  sessionId?: string,
+  sessionId?: string | null,
   language: 'en' | 'es' = 'en'
 ): Promise<ChatResponse> {
+  const trimmed = message.trim();
+  if (!trimmed || trimmed.length === 0) {
+    throw Object.assign(new Error('Message cannot be empty'), { code: 'validation_error' });
+  }
+  if (trimmed.length > 4096) {
+    throw Object.assign(new Error('Message too long (max 4096 characters)'), { code: 'validation_error' });
+  }
+
+  const validLangs = ['en', 'es'] as const;
+  const lang = validLangs.includes(language) ? language : 'en';
+
+  const payload: Record<string, string> = { message: trimmed, language: lang };
+
+  // Only include session_id if it's a non-empty string
+  if (sessionId && sessionId.trim().length > 0) {
+    payload.session_id = sessionId.trim();
+  }
+
   return fetchWithRetry<ChatResponse>(
     `${API_BASE_URL}/api/v1/chat`,
     {
       method: 'POST',
-      body: JSON.stringify({
-        message,
-        session_id: sessionId,
-        language,
-      }),
+      body: JSON.stringify(payload),
     },
-    1 // Only 1 attempt for chat messages (user can retry manually)
+    1
   );
 }
 
