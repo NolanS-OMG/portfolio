@@ -22,16 +22,18 @@ export function useHealthCheck(intervalMs: number = 30000): UseHealthCheckReturn
   const intervalRef = useRef<number>();
 
   const checkHealth = async () => {
+    console.log('[HealthCheck] Running health check...');
     try {
       const response: HealthResponse = await getHealth();
+      console.log('[HealthCheck] Response:', response);
+      console.log('[HealthCheck] Status field:', response.status, '| isHealthy will be:', response.status === 'healthy');
       setStatus(response.status);
       setLastCheck(response.timestamp);
-      setFailCount(0); // Reset fail count on success
+      setFailCount(0);
     } catch (error) {
-      console.error('Health check failed:', error);
+      console.error('[HealthCheck] Failed:', error);
       setFailCount((prev) => prev + 1);
 
-      // After 3 consecutive failures, mark as unhealthy
       if (failCount >= 2) {
         setStatus('unhealthy');
       }

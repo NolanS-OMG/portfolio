@@ -1,377 +1,315 @@
-import { useEffect, useState, useRef } from 'react';
-import ChatBot from 'react-chatbotify';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
+import ChatBot, { ChatBotProvider } from 'react-chatbotify';
+import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import { useHealthCheck } from '../hooks/useHealthCheck';
 import { useChatSession } from '../hooks/useChatSession';
 import {
   sendMessage as apiSendMessage,
-  getWelcome,
-  deleteSession
 } from '../services/chatApi';
 
-function ChatWidget() {
+const WELCOME_PHRASES = {
+  en: ['Welcome!', 'Hi there!', 'Need help?', 'Ask me anything!', 'Hello!'],
+  es: ['¡Bienvenido!', '¡Hola!', '¿Necesitas ayuda?', '¡Pregúntame!', '¡Hey!'],
+};
+
+const WELCOME_MESSAGES = {
+  en: "Hi! I'm Nolan's AI assistant. How can I help you?",
+  es: '¡Hola! Soy el asistente AI de Nolan. ¿En qué puedo ayudarte?',
+};
+
+const WELCOME_SUGGESTIONS = {
+  en: [
+    'Tell me about his AI experience',
+    'What projects has he built?',
+    'Show me his tech stack',
+    'How can I contact him?',
+  ],
+  es: [
+    'Cuéntame sobre su experiencia en IA',
+    '¿Qué proyectos ha construido?',
+    'Muéstrame su stack tecnológico',
+    '¿Cómo puedo contactarlo?',
+  ],
+};
+
+function BotMarkdown({ content }) {
+  return (
+    <div className="bot-markdown" style={{ fontSize: '14px' }}>
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p style={{ margin: '0 0 6px 0' }}>{children}</p>,
+          h1: ({ children }) => <p style={{ margin: '6px 0 4px', color: '#10b981', fontSize: '14px', fontWeight: 'bold' }}>{children}</p>,
+          h2: ({ children }) => <p style={{ margin: '6px 0 4px', color: '#10b981', fontSize: '14px', fontWeight: 'bold' }}>{children}</p>,
+          h3: ({ children }) => <p style={{ margin: '4px 0 3px', color: '#10b981', fontSize: '13px', fontWeight: 'bold' }}>{children}</p>,
+          ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: '16px', listStyleType: 'disc' }}>{children}</ul>,
+          ol: ({ children }) => <ol style={{ margin: '4px 0', paddingLeft: '16px', listStyleType: 'decimal' }}>{children}</ol>,
+          li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
+          strong: ({ children }) => <strong style={{ color: '#10b981' }}>{children}</strong>,
+          em: ({ children }) => <em style={{ color: '#d1d5db' }}>{children}</em>,
+          code: ({ node, children }) => {
+            const isBlock = node?.position?.start?.line !== node?.position?.end?.line
+              || String(children).includes('\n');
+            return isBlock
+              ? <pre style={{ background: '#1f2937', padding: '8px', borderRadius: '6px', fontSize: '12px', overflowX: 'auto', margin: '4px 0', whiteSpace: 'pre-wrap' }}><code>{children}</code></pre>
+              : <code style={{ background: '#1f2937', padding: '1px 4px', borderRadius: '3px', fontSize: '12px', color: '#10b981' }}>{children}</code>;
+          },
+          pre: ({ children }) => <>{children}</>,
+          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', textDecoration: 'underline' }}>{children}</a>,
+          table: ({ children }) => <div style={{ overflowX: 'auto', margin: '8px 0' }}><table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px' }}>{children}</table></div>,
+          th: ({ children }) => <th style={{ border: '1px solid #374151', padding: '4px 8px', background: '#1f2937', color: '#10b981', textAlign: 'left' }}>{children}</th>,
+          td: ({ children }) => <td style={{ border: '1px solid #374151', padding: '4px 8px' }}>{children}</td>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
+function ChatInner() {
   const { i18n } = useTranslation();
-  const { status, isHealthy } = useHealthCheck(30000);
-  const { sessionId, saveSession, clearSession } = useChatSession();
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [welcomeMsg, setWelcomeMsg] = useState('');
-  const isInitialized = useRef(false);
+  const { isHealthy } = useHealthCheck(30000);
+  const { sessionId, saveSession } = useChatSession();
+  const sessionRef = useRef(sessionId);
+  const processingRef = useRef(false);
+  const phraseIndexRef = useRef(Math.floor(Math.random() * WELCOME_PHRASES.en.length));
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const tooltipText = WELCOME_PHRASES[lang][phraseIndexRef.current];
 
-  // Load welcome message on mount
-  useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
+  console.log('[ChatInner] isHealthy:', isHealthy, '| lang:', lang);
 
-    console.log('[ChatWidget] Loading welcome message...');
-    getWelcome()
-      .then(data => {
-        console.log('[ChatWidget] Welcome data:', data);
-        setWelcomeMsg(data.message);
-        setSuggestions(data.suggestions);
-      })
-      .catch(err => {
-        console.error('[ChatWidget] Failed to load welcome:', err);
-        setWelcomeMsg("Hi! I'm Nolan's AI assistant. How can I help you?");
-      });
-  }, []);
+  useEffect(() => { sessionRef.current = sessionId; }, [sessionId]);
 
-  // Flow configuration
-  const flow = {
+  const handleUserMessage = useCallback(async (params) => {
+    const text = params.userInput;
+    if (processingRef.current) {
+      await params.injectMessage(
+        lang === 'es'
+          ? 'Por favor espera, estoy procesando tu mensaje anterior...'
+          : 'Please wait, I\'m still processing your previous message...'
+      );
+      return;
+    }
+    processingRef.current = true;
+    try {
+      const language = i18n.language.startsWith('es') ? 'es' : 'en';
+      const response = await apiSendMessage(text, sessionRef.current || null, language);
+      if (!sessionRef.current && response.session_id) {
+        saveSession(response.session_id);
+        sessionRef.current = response.session_id;
+      }
+      await params.injectMessage(<BotMarkdown content={response.response} />);
+    } catch (error) {
+      const msg = error.code === 'rate_limit_exceeded'
+        ? `Too many requests. Please wait ${error.retryAfter || 30} seconds.`
+        : (error.message || 'Sorry, something went wrong. Please try again.');
+      await params.injectMessage(msg);
+    } finally {
+      processingRef.current = false;
+    }
+  }, [i18n.language, saveSession, lang]);
+
+  const flow = useMemo(() => ({
     start: {
-      message: welcomeMsg || "Hi! I'm Nolan's AI assistant. How can I help you?",
-      path: "loop"
+      message: WELCOME_MESSAGES[lang],
+      options: WELCOME_SUGGESTIONS[lang],
+      path: 'loop',
     },
     loop: {
       message: async (params) => {
-        console.log('[Flow] Processing user input:', params.userInput);
-
-        // Mark as interacted
-        if (!hasInteracted) {
-          setHasInteracted(true);
-        }
-
-        try {
-          // Determine language
-          const language = i18n.language.startsWith('es') ? 'es' : 'en';
-
-          console.log('[Flow] Calling API...', { sessionId, language });
-
-          // Call API
-          const response = await apiSendMessage(
-            params.userInput,
-            sessionId || undefined,
-            language
-          );
-
-          console.log('[Flow] API response:', response);
-
-          // Save session ID if new
-          if (!sessionId && response.session_id) {
-            console.log('[Flow] Saving new session:', response.session_id);
-            saveSession(response.session_id);
-          }
-
-          // Return bot response
-          return response.response;
-
-        } catch (error) {
-          console.error('[Flow] API error:', error);
-
-          if (error.code === 'rate_limit_exceeded') {
-            const retryAfter = error.retryAfter || 30;
-            return `Too many requests. Please wait ${retryAfter} seconds.`;
-          } else if (error.statusCode === 503) {
-            return 'Chat service is temporarily unavailable. Please try again later.';
-          } else {
-            return error.message || 'Sorry, something went wrong. Please try again.';
-          }
-        }
+        await handleUserMessage(params);
       },
-      path: "loop"
-    }
-  };
+      path: 'loop',
+    },
+  }), [lang, handleUserMessage]);
 
-  const settings = {
+  const settings = useMemo(() => ({
     general: {
       primaryColor: '#10b981',
       secondaryColor: '#1f2937',
       fontFamily: 'inherit',
       embedded: false,
       showHeader: true,
-      showFooter: true,
+      showFooter: false,
+      showInputRow: true,
+    },
+    tooltip: {
+      mode: 'ALWAYS',
+      text: tooltipText,
     },
     header: {
-      title: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>💬</span>
-          <span>Nolan's AI Assistant</span>
-        </div>
-      ),
-      showAvatar: true,
-      avatar: '/profile.jpeg',
+      title: "Nolan's AI Assistant",
+      showAvatar: false,
+      buttons: ['close-chat-button'],
     },
-    chatHistory: {
-      storageKey: 'portfolio_chat_history',
-      disabled: true,
+    notification: {
+      disabled: false,
+      defaultToggledOn: true,
+      showCount: true,
     },
-    chatButton: {
-      icon: '💬',
-    },
+    audio: { disabled: true },
+    voice: { disabled: true },
+    emoji: { disabled: true },
+    fileAttachment: { disabled: true },
+    chatHistory: { disabled: true },
+    chatButton: { icon: '' },
     chatWindow: {
       showScrollbar: true,
       autoJumpToBottom: true,
+      defaultOpen: false,
     },
     botBubble: {
-      showAvatar: true,
-      avatar: '/profile.jpeg',
-      simStream: true, // Simulate typing
-    },
-    userBubble: {
       showAvatar: false,
+      simulateStream: false,
     },
+    userBubble: { showAvatar: false },
     chatInput: {
       disabled: !isHealthy,
-      enabledPlaceholderText: 'Type your message...',
-      disabledPlaceholderText: 'Chat unavailable',
+      enabledPlaceholderText: lang === 'es' ? 'Escribe tu mensaje...' : 'Type your message...',
+      disabledPlaceholderText: lang === 'es' ? 'Chat no disponible - intenta más tarde' : 'Chat unavailable - try again later',
+      blockSpam: true,
+      sendOptionOutput: true,
     },
-    footer: {
-      text: (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          alignItems: 'center'
-        }}>
-          <span style={{ fontSize: '11px', opacity: 0.7 }}>
-            {!isHealthy && (
-              <span style={{ color: '#ef4444', marginRight: '8px' }}>
-                ⚠️ {status}
-              </span>
-            )}
-            Powered by AI
-          </span>
-          <button
-            onClick={async (e) => {
-              e.preventDefault();
-              console.log('[Footer] Clearing chat...');
+  }), [isHealthy, tooltipText, lang]);
 
-              if (sessionId) {
-                try {
-                  await deleteSession(sessionId);
-                } catch (err) {
-                  console.error('[Footer] Error deleting session:', err);
-                }
-              }
-
-              clearSession();
-              setHasInteracted(false);
-
-              // Reload page to reset chat
-              window.location.reload();
-            }}
-            style={{
-              fontSize: '11px',
-              opacity: 0.7,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'inherit',
-              padding: '4px 8px'
-            }}
-          >
-            Clear Chat
-          </button>
-        </div>
-      ),
+  const styles = useMemo(() => ({
+    chatWindowStyle: {
+      backgroundColor: '#111827',
+      width: '360px',
+      height: '480px',
+      borderRadius: '16px',
+      overflow: 'hidden',
     },
-  };
+    headerStyle: {
+      background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+      color: '#f9fafb',
+      padding: '14px 16px',
+      borderBottom: '1px solid #374151',
+      borderRadius: '16px 16px 0 0',
+    },
+    bodyStyle: {
+      backgroundColor: '#111827',
+      padding: '12px',
+    },
+    botBubbleStyle: {
+      backgroundColor: 'transparent',
+      color: '#f9fafb',
+      borderRadius: '0',
+      maxWidth: '85%',
+      fontSize: '14px',
+      padding: '4px 0',
+    },
+    userBubbleStyle: {
+      backgroundColor: '#10b981',
+      color: '#ffffff',
+      borderRadius: '12px',
+      maxWidth: '85%',
+      fontSize: '14px',
+    },
+    botOptionStyle: {
+      backgroundColor: 'transparent',
+      color: '#10b981',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: '#10b981',
+      borderRadius: '18px',
+      fontSize: '13px',
+      padding: '8px 14px',
+      cursor: 'pointer',
+    },
+    botOptionHoveredStyle: {
+      backgroundColor: '#10b981',
+      color: '#ffffff',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: '#10b981',
+    },
+    chatInputContainerStyle: {
+      backgroundColor: '#1f2937',
+      borderTop: '1px solid #374151',
+      borderRadius: '0 0 16px 16px',
+    },
+    chatInputAreaStyle: {
+      backgroundColor: '#111827',
+      color: '#f9fafb',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: '#374151',
+      borderRadius: '8px',
+      fontSize: '14px',
+    },
+    chatInputAreaFocusedStyle: {
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: '#10b981',
+    },
+    sendButtonStyle: {
+      backgroundColor: '#10b981',
+      borderRadius: '8px',
+    },
+    sendButtonHoveredStyle: {
+      backgroundColor: '#059669',
+    },
+    chatButtonStyle: {
+      width: '60px',
+      height: '60px',
+      borderRadius: '50%',
+      backgroundColor: 'transparent',
+      borderWidth: '0',
+      borderStyle: 'none',
+      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+      backgroundImage: 'url(/logo_chat_ai.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    },
+    chatButtonHoveredStyle: {
+      transform: 'scale(1.08)',
+      boxShadow: '0 6px 20px rgba(16, 185, 129, 0.5)',
+    },
+    tooltipStyle: {
+      backgroundColor: '#1f2937',
+      color: '#f9fafb',
+      borderRadius: '8px',
+      padding: '8px 12px',
+      fontSize: '13px',
+      border: '1px solid #374151',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    },
+    notificationBadgeStyle: {
+      backgroundColor: '#ef4444',
+      color: '#ffffff',
+      fontSize: '10px',
+      fontWeight: 'bold',
+      width: '18px',
+      height: '18px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      top: '-2px',
+      right: '-2px',
+    },
+    closeChatButtonStyle: {
+      backgroundColor: 'transparent',
+      borderWidth: '0',
+      borderStyle: 'none',
+      cursor: 'pointer',
+    },
+    closeChatIconStyle: {
+      fill: '#9ca3af',
+    },
+  }), []);
 
-  // Handle suggestion click (inject into chat)
-  const handleSuggestionClick = async (suggestion) => {
-    console.log('[Suggestion] Clicked:', suggestion);
-    setHasInteracted(true);
+  return <ChatBot flow={flow} settings={settings} styles={styles} />;
+}
 
-    // Simulate user clicking suggestion by triggering input
-    // This is a workaround - we'll manually trigger the chatbot
-    const inputElement = document.querySelector('.rcb-chat-input');
-    if (inputElement) {
-      // Set the value
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype,
-        'value'
-      ).set;
-      nativeInputValueSetter.call(inputElement, suggestion);
-
-      // Trigger input event
-      inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-
-      // Trigger submit
-      const form = inputElement.closest('form');
-      if (form) {
-        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-      }
-    }
-  };
-
-  // Render welcome bubble
-  const renderWelcomeBubble = () => {
-    if (hasInteracted || !welcomeMsg) return null;
-
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: '80px',
-        right: '20px',
-        background: '#1f2937',
-        border: '1px solid #374151',
-        borderRadius: '12px',
-        padding: '16px',
-        maxWidth: '320px',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
-        zIndex: 9998,
-        color: 'white',
-        animation: 'slideUp 0.3s ease-out'
-      }}>
-        <button
-          onClick={() => {
-            console.log('[Welcome] Dismissed');
-            setHasInteracted(true);
-          }}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            background: 'none',
-            border: 'none',
-            color: '#9ca3af',
-            cursor: 'pointer',
-            fontSize: '18px',
-            padding: '4px',
-            lineHeight: 1
-          }}
-        >
-          ×
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <img
-            src="/profile.jpeg"
-            alt="Nolan"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              border: '2px solid #10b981'
-            }}
-          />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              Nolan's AI Assistant
-            </div>
-            <div style={{ fontSize: '11px', opacity: 0.7 }}>
-              Just now
-            </div>
-          </div>
-          <div style={{
-            background: '#ef4444',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            borderRadius: '10px',
-            padding: '2px 6px'
-          }}>
-            1
-          </div>
-        </div>
-
-        <div style={{
-          fontSize: '13px',
-          marginBottom: suggestions.length > 0 ? '12px' : '0',
-          lineHeight: '1.5'
-        }}>
-          {welcomeMsg}
-        </div>
-
-        {suggestions.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                style={{
-                  background: '#111827',
-                  color: 'white',
-                  border: '1px solid #10b981',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#10b981'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
+function ChatWidget() {
   return (
-    <>
-      <ChatBot flow={flow} settings={settings} />
-      {renderWelcomeBubble()}
-
-      {/* Service unavailable */}
-      {!isHealthy && (
-        <div style={{
-          position: 'fixed',
-          bottom: hasInteracted ? '80px' : '420px',
-          right: '20px',
-          background: '#111827',
-          color: 'white',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-          zIndex: 9997,
-          maxWidth: '300px',
-          border: '1px solid #ef4444',
-          animation: 'slideUp 0.3s ease-out'
-        }}>
-          <p style={{ margin: 0, marginBottom: '8px', fontSize: '14px' }}>
-            ⚠️ Chat temporarily unavailable
-          </p>
-          <a
-            href="mailto:nolan1scott3@gmail.com"
-            style={{
-              color: '#10b981',
-              textDecoration: 'none',
-              fontSize: '13px'
-            }}
-          >
-            Email me instead →
-          </a>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-    </>
+    <ChatBotProvider>
+      <ChatInner />
+    </ChatBotProvider>
   );
 }
 

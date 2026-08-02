@@ -10,22 +10,58 @@
 
 /* Chat window container */
 .rcb-chat-window {
-  background: var(--chat-background) !important;
+  background: var(--chat-secondary-color) !important;
   border: 1px solid var(--chat-border) !important;
   border-radius: 16px !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden !important;
 }
 
-/* Chat header */
-.rcb-chat-header {
-  background: var(--chat-secondary-color) !important;
+/* Header container - holds title row + buttons row */
+.rcb-chat-header-container {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%) !important;
   border-bottom: 1px solid var(--chat-border) !important;
-  padding: 16px !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 14px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
 }
 
-.rcb-chat-header-text {
-  color: white !important;
-  font-weight: 600 !important;
+/* Title area with avatar + name */
+.rcb-chat-header-container > .rcb-chat-header:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Buttons area (close button) */
+.rcb-chat-header-container > .rcb-chat-header:last-child {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Header title text */
+.rcb-chat-header-container .rcb-bot-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background-size: cover !important;
+  background-position: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Close button styling */
+.rcb-close-chat-icon {
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s !important;
+}
+
+.rcb-close-chat-icon:hover {
+  opacity: 1 !important;
 }
 
 /* Chat body */
@@ -34,14 +70,15 @@
   padding: 16px !important;
 }
 
-/* Bot messages */
+/* Bot messages - no box, just clean text */
 .rcb-bot-message {
-  background: var(--chat-secondary-color) !important;
-  color: white !important;
-  border-radius: 12px !important;
-  padding: 12px 16px !important;
-  margin-bottom: 12px !important;
-  border: 1px solid var(--chat-border) !important;
+  background: transparent !important;
+  color: #e5e7eb !important;
+  border-radius: 0 !important;
+  padding: 4px 0 !important;
+  margin-bottom: 8px !important;
+  border: none !important;
+  line-height: 1.5 !important;
 }
 
 /* User messages */
@@ -58,6 +95,7 @@
 .rcb-chat-input-container {
   background: var(--chat-secondary-color) !important;
   border-top: 1px solid var(--chat-border) !important;
+  border-radius: 0 0 16px 16px !important;
   padding: 12px !important;
 }
 
@@ -101,34 +139,56 @@
   cursor: not-allowed !important;
 }
 
-/* Chat button (floating bubble) */
+/* Chat button (floating bubble) - perfect circle, image fills entirely */
 .rcb-chat-button {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  width: 56px !important;
-  height: 56px !important;
+  width: 60px !important;
+  height: 60px !important;
   border-radius: 50% !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+  background: transparent url('/logo_chat_ai.png') center/cover no-repeat !important;
   border: none !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
   cursor: pointer !important;
   transition: all 0.3s !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 24px !important;
+  overflow: hidden !important;
 }
 
 .rcb-chat-button:hover {
-  transform: scale(1.1) !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
 }
 
-/* Footer */
+/* Hide default icon inside button so only background image shows */
+.rcb-chat-button img,
+.rcb-chat-button svg {
+  display: none !important;
+}
+
+/* Notification badge - red circle */
+.rcb-badge {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: bold !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #111827 !important;
+}
+
+/* Footer - hidden */
 .rcb-chat-footer {
-  background: var(--chat-secondary-color) !important;
-  border-top: 1px solid var(--chat-border) !important;
-  padding: 8px 16px !important;
-  color: #9ca3af !important;
-  font-size: 11px !important;
+  display: none !important;
+}
+
+/* Hide emoji/file attachment row */
+.rcb-chat-input-button-container {
+  display: none !important;
 }
 
 /* Scrollbar customization */
@@ -149,8 +209,11 @@
   background: var(--chat-primary-color) !important;
 }
 
-/* Avatar styling */
-.rcb-bot-avatar img,
+/* Avatar styling - only user avatar visible */
+.rcb-bot-avatar {
+  display: none !important;
+}
+
 .rcb-user-avatar img {
   border-radius: 50% !important;
   border: 2px solid var(--chat-border) !important;
@@ -223,6 +286,30 @@
   }
 }
 
+/* Markdown content inside bot messages */
+.bot-markdown {
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.bot-markdown p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.bot-markdown ul,
+.bot-markdown ol {
+  color: #e5e7eb;
+}
+
+.bot-markdown pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bot-markdown table {
+  color: #e5e7eb;
+}
+
 /* Dark mode improvements */
 @media (prefers-color-scheme: dark) {
   .rcb-chat-window {
@@ -246,20 +333,40 @@
   }
 }
 
-/* Quick reply buttons (suggestions) */
-.rcb-quick-reply-button {
-  background: var(--chat-secondary-color) !important;
-  color: white !important;
-  border: 1px solid var(--chat-primary-color) !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  margin: 4px !important;
+/* Option buttons (suggestions) */
+.rcb-options-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  padding: 4px 0 !important;
+}
+
+.rcb-options {
+  background: transparent !important;
+  color: #10b981 !important;
+  border: 1px solid #10b981 !important;
+  border-radius: 18px !important;
+  padding: 8px 14px !important;
   cursor: pointer !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   transition: all 0.2s !important;
 }
 
-.rcb-quick-reply-button:hover {
-  background: var(--chat-primary-color) !important;
+.rcb-options:hover {
+  background: #10b981 !important;
+  color: #ffffff !important;
   transform: translateY(-1px) !important;
+}
+
+/* Notification badge (see above for main styling) */
+
+/* Tooltip */
+.rcb-chat-tooltip {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  font-size: 13px !important;
+  padding: 8px 12px !important;
 }
