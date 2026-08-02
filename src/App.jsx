@@ -306,7 +306,7 @@ function App() {
       </section>
 
       <ChatWidget />
-      {import.meta.env.DEV && <DevToolsPanel />}
+      {import.meta.env.VITE_SHOW_DEV_TOOLS === 'true' && <DevToolsPanel />}
     </div>
   );
 }
