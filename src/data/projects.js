@@ -1,0 +1,38 @@
+export const projects = [
+  {
+    id: 'snake-rl',
+    title: 'Snake RL - AI vs Human',
+    description: 'Snake game with AI trained via Reinforcement Learning (PPO) running in-browser with ONNX Runtime Web. 100M training steps, VS mode, mobile support.',
+    skills: ['TypeScript', 'Next.js', 'Python', 'ONNX', 'Reinforcement Learning'],
+    img: '/snake_rl.PNG',
+    github: 'https://github.com/NolanS-OMG/ia_snake',
+    page: 'https://ia-snake.vercel.app/',
+  },
+  {
+    id: 'schools',
+    title: 'Schools Landing/Admin',
+    description: 'Platform for schools with landing page and admin system: student grades, reports, announcements, parent supervision. Responsive design.',
+    skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Tailwind', 'Firebase'],
+    img: '/colegios.PNG',
+    github: null,
+    page: 'https://isolu-proyecto-colegios.netlify.app/',
+  },
+  {
+    id: 'inventory-crud',
+    title: 'Inventory CRUD App',
+    description: 'Full CRUD application with validations, built as a technical assessment.',
+    skills: ['HTML', 'CSS', 'JavaScript', 'NodeJS', 'MongoDB'],
+    img: '/abcc.PNG',
+    github: 'https://github.com/NolanS-OMG/aplicacionabcc',
+    page: 'https://aplicacionabcc.netlify.app/',
+  },
+  {
+    id: 'portfolios-lobby',
+    title: 'Portfolios Project',
+    description: 'Lobby page showcasing all portfolios built for different clients.',
+    skills: ['HTML', 'CSS', 'JavaScript'],
+    img: '/portadaProvisional.jpg',
+    github: 'https://github.com/NolanS-OMG/portafolio_lobby',
+    page: 'https://lobby-portfolios.netlify.app/',
+  },
+];

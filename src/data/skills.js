@@ -1,0 +1,38 @@
+export const skills = {
+  Backend: {
+    Python: 9,
+    FastAPI: 9,
+    'Ruby on Rails': 8,
+    'Node.js': 7,
+    Java: 7,
+    'Spring Boot': 7,
+    PostgreSQL: 8,
+    MongoDB: 7,
+  },
+  Frontend: {
+    React: 9,
+    'React Native': 7,
+    TypeScript: 8,
+    JavaScript: 9,
+    Tailwind: 8,
+    'Next.js': 7,
+    HTML: 9,
+    CSS: 9,
+  },
+  'AI/ML': {
+    LLMs: 9,
+    RAG: 9,
+    'Prompt Engineering': 10,
+    'Reinforcement Learning': 8,
+    ONNX: 7,
+    'AI Agents': 8,
+  },
+  DevOps: {
+    AWS: 7,
+    Docker: 7,
+    'CI/CD': 7,
+    Jenkins: 7,
+    Firebase: 8,
+    Git: 9,
+  },
+};

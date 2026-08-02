@@ -1,0 +1,13 @@
+@keyframes section-highlight-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.tool-highlight-active {
+  animation: section-highlight-pulse 0.75s ease-out 2;
+  border-radius: 8px;
+  outline: 2px solid rgba(16, 185, 129, 0.6);
+  outline-offset: 4px;
+  transition: outline 0.3s ease;
+}
