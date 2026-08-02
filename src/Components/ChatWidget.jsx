@@ -100,6 +100,22 @@ function ChatInner() {
   const phraseIndexRef = useRef(Math.floor(Math.random() * WELCOME_PHRASES.en.length));
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
   const tooltipText = WELCOME_PHRASES[lang][phraseIndexRef.current];
+  const [expanded, setExpanded] = useState(false);
+
+  const toggleExpand = useCallback(() => {
+    setExpanded((prev) => {
+      const next = !prev;
+      requestAnimationFrame(() => {
+        const win = document.querySelector('.rcb-chat-window');
+        if (win) {
+          win.style.width = next ? '480px' : '360px';
+          win.style.height = next ? '620px' : '480px';
+          win.style.transition = 'width 0.3s ease, height 0.3s ease';
+        }
+      });
+      return next;
+    });
+  }, []);
 
   const statusRef = useRef(status);
   statusRef.current = status;
@@ -114,7 +130,7 @@ function ChatInner() {
   useEffect(() => {
     const handler = (e) => {
       const { tool, args } = e.detail;
-      executeTool(tool, args, injectMessageRef.current);
+      executeTool(tool, args, injectMessageRef.current, langRef.current);
     };
     window.addEventListener('dev-tool-execute', handler);
     return () => window.removeEventListener('dev-tool-execute', handler);
@@ -180,9 +196,9 @@ function ChatInner() {
     start: {
       message: async (params) => {
         injectMessageRef.current = params.injectMessage;
-        await params.injectMessage(WELCOME_MESSAGES[lang]);
+        return WELCOME_MESSAGES[langRef.current];
       },
-      options: WELCOME_SUGGESTIONS[lang],
+      options: () => WELCOME_SUGGESTIONS[langRef.current],
       path: 'loop',
     },
     loop: {
@@ -191,7 +207,7 @@ function ChatInner() {
       },
       path: 'loop',
     },
-  }), [lang]);
+  }), []);
 
   const settings = useMemo(() => ({
     general: {
@@ -210,7 +226,44 @@ function ChatInner() {
     header: {
       title: "Nolan's AI Assistant",
       showAvatar: false,
-      buttons: ['close-chat-button'],
+      buttons: [
+        <button
+          key="expand-btn"
+          onClick={toggleExpand}
+          aria-label={expanded ? 'Shrink chat' : 'Expand chat'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '24px',
+            height: '24px',
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            borderRadius: '4px',
+            padding: 0,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {expanded ? (
+              <>
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 10 14 10 14 4" />
+                <line x1="14" y1="10" x2="21" y2="3" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </>
+            ) : (
+              <>
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </>
+            )}
+          </svg>
+        </button>,
+        'close-chat-button',
+      ],
     },
     notification: {
       disabled: false,
@@ -240,7 +293,7 @@ function ChatInner() {
       blockSpam: true,
       sendOptionOutput: true,
     },
-  }), [tooltipText, lang]);
+  }), [tooltipText, lang, expanded, toggleExpand]);
 
   const styles = useMemo(() => ({
     chatWindowStyle: {
@@ -249,6 +302,7 @@ function ChatInner() {
       height: '480px',
       borderRadius: '16px',
       overflow: 'hidden',
+      transition: 'width 0.3s ease, height 0.3s ease',
     },
     headerStyle: {
       background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
