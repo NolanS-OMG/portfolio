@@ -28,15 +28,35 @@ async function fetchWithRetry<T>(
 ): Promise<T> {
   let lastError: Error | null = null;
 
+  console.log(`[chatApi] Fetching ${url}`, {
+    method: options.method || 'GET',
+    maxRetries,
+    hasBody: !!options.body
+  });
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await fetch(url, {
+      const fetchOptions = {
         ...options,
         headers: {
           ...DEFAULT_HEADERS,
           ...options.headers,
         },
-        credentials: 'include', // Important for cookies
+        credentials: 'include' as RequestCredentials, // Important for cookies
+      };
+
+      console.log(`[chatApi] Attempt ${attempt}/${maxRetries}`, {
+        url,
+        method: fetchOptions.method,
+        headers: { ...fetchOptions.headers, 'X-API-Key': '***' }, // Hide API key in logs
+        body: options.body ? JSON.parse(options.body as string) : undefined
+      });
+
+      const response = await fetch(url, fetchOptions);
+      console.log(`[chatApi] Response received`, {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
 
       // If response is not ok, try to parse error
@@ -46,6 +66,8 @@ async function fetchWithRetry<T>(
           message: `HTTP ${response.status}: ${response.statusText}`,
         }));
 
+        console.error('[chatApi] Error response:', errorData);
+
         const error = new Error(errorData.message || 'Request failed');
         (error as any).code = errorData.error;
         (error as any).statusCode = response.status;
@@ -53,25 +75,29 @@ async function fetchWithRetry<T>(
         throw error;
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('[chatApi] Success response:', data);
+      return data;
     } catch (error) {
       lastError = error as Error;
+      console.error(`[chatApi] Attempt ${attempt} failed:`, error);
 
       // Don't retry on 4xx errors (client errors)
       if ((error as any).statusCode && (error as any).statusCode < 500) {
+        console.log('[chatApi] Client error, not retrying');
         throw error;
       }
 
       // Don't retry on last attempt
       if (attempt === maxRetries) {
+        console.log('[chatApi] Max retries reached, throwing error');
         throw error;
       }
 
       // Exponential backoff: 1s, 2s, 4s
       const delay = Math.pow(2, attempt - 1) * 1000;
+      console.log(`[chatApi] Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
       await new Promise((resolve) => setTimeout(resolve, delay));
-
-      console.log(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
     }
   }
 
