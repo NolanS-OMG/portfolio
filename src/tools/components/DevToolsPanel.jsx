@@ -9,7 +9,7 @@ function fireTool(tool, args = {}) {
 export default function DevToolsPanel() {
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState('header');
-  const [projectFilter, setProjectFilter] = useState('');
+  const [projectIds, setProjectIds] = useState('');
   const [contactType, setContactType] = useState('all');
   const [compatQuery, setCompatQuery] = useState('React Python FastAPI');
   const [prefillEmail, setPrefillEmail] = useState('');
@@ -150,12 +150,12 @@ export default function DevToolsPanel() {
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           <input
             type="text"
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            placeholder="Filter (e.g. React)"
+            value={projectIds}
+            onChange={(e) => setProjectIds(e.target.value)}
+            placeholder="IDs (e.g. snake-rl,schools)"
             style={{ ...inputStyle, flex: 1 }}
           />
-          <button style={btnStyle} onClick={() => fireTool('show_projects', { filter: projectFilter })}>
+          <button style={btnStyle} onClick={() => fireTool('show_projects', { ids: projectIds ? projectIds.split(',').map(s => s.trim()) : [] })}>
             Fire
           </button>
         </div>
