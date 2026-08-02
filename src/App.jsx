@@ -6,6 +6,7 @@ import { PiSuitcaseSimpleBold } from "react-icons/pi";
 import { FaCode } from "react-icons/fa";
 import Experience from "./Components/Experience";
 import Projects from "./Components/Projects";
+import ChatWidget from "./components/ChatWidget";
 import { useTranslation } from 'react-i18next';
 
 function App() {
@@ -303,6 +304,7 @@ function App() {
         <Projects projects={lan === "en" ? projects_en : projects_es} articleClassName="projects-half" />
       </section>
 
+      <ChatWidget />
     </div>
   );
 }
