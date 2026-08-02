@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toolTheme } from './theme';
 import { contact } from '../../data/contact';
 
-function CopyItem({ label, value, isLink }) {
+function CopyItem({ label, value, isLink, copyLabel, copiedLabel }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -61,13 +61,16 @@ function CopyItem({ label, value, isLink }) {
           whiteSpace: 'nowrap',
         }}
       >
-        {copied ? '✓' : 'Copy'}
+        {copied ? '✓' : copyLabel}
       </button>
     </div>
   );
 }
 
-export default function CopyableContact({ type = 'all' }) {
+export default function CopyableContact({ type = 'all', lang = 'en' }) {
+  const t = (en, es) => lang === 'es' ? es : en;
+  const copyLabel = t('Copy', 'Copiar');
+  const copiedLabel = '✓';
   const items = [];
 
   if (type === 'all' || type === 'email') {
@@ -81,9 +84,9 @@ export default function CopyableContact({ type = 'all' }) {
   }
 
   return (
-    <div style={{ padding: '4px 0', width: '100%' }}>
+    <div className="tool-appear" style={{ padding: '4px 0', width: '100%' }}>
       {items.map((item) => (
-        <CopyItem key={item.label} {...item} />
+        <CopyItem key={item.label} {...item} copyLabel={copyLabel} copiedLabel={copiedLabel} />
       ))}
     </div>
   );

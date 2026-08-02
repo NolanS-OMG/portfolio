@@ -4,6 +4,7 @@ import { contact } from '../../data/contact';
 
 export default function DownloadCVButton({ lang = 'en' }) {
   const [downloaded, setDownloaded] = useState(false);
+  const t = (en, es) => lang === 'es' ? es : en;
 
   const handleClick = () => {
     const link = document.createElement('a');
@@ -17,9 +18,9 @@ export default function DownloadCVButton({ lang = 'en' }) {
   };
 
   return (
-    <div style={{ padding: '8px 0' }}>
+    <div className="tool-appear" style={{ padding: '8px 0' }}>
       <p style={{ color: toolTheme.text, fontSize: '14px', margin: '0 0 8px 0' }}>
-        {lang === 'es' ? 'Aquí tienes el CV de Nolan:' : "Here's Nolan's CV:"}
+        {t("Here's Nolan's CV:", 'Aquí tienes el CV de Nolan:')}
       </p>
       <button
         onClick={handleClick}
@@ -43,7 +44,7 @@ export default function DownloadCVButton({ lang = 'en' }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            {lang === 'es' ? '¡Descargado!' : 'Downloaded!'}
+            {t('Downloaded!', '¡Descargado!')}
           </>
         ) : (
           <>
@@ -52,7 +53,7 @@ export default function DownloadCVButton({ lang = 'en' }) {
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            {lang === 'es' ? 'Descargar CV (PDF)' : 'Download CV (PDF)'}
+            {t('Download CV (PDF)', 'Descargar CV (PDF)')}
           </>
         )}
       </button>
