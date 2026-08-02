@@ -1,12 +1,9 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import ChatBot, { ChatBotProvider } from 'react-chatbotify';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
-import { useHealthCheck } from '../hooks/useHealthCheck';
-import { useChatSession } from '../hooks/useChatSession';
-import {
-  sendMessage as apiSendMessage,
-} from '../services/chatApi';
+import { useChatWebSocket } from '../hooks/useChatWebSocket';
+import { executeTool } from '../tools/index';
 
 const WELCOME_PHRASES = {
   en: ['Welcome!', 'Hi there!', 'Need help?', 'Ask me anything!', 'Hello!'],
@@ -34,6 +31,7 @@ const WELCOME_SUGGESTIONS = {
 };
 
 function BotMarkdown({ content }) {
+  const processed = content.replace(/\n/g, '  \n');
   return (
     <div className="bot-markdown" style={{ fontSize: '14px' }}>
       <ReactMarkdown
@@ -61,68 +59,139 @@ function BotMarkdown({ content }) {
           td: ({ children }) => <td style={{ border: '1px solid #374151', padding: '4px 8px' }}>{children}</td>,
         }}
       >
-        {content}
+        {processed}
       </ReactMarkdown>
     </div>
   );
 }
 
+function StreamingBubble({ streamRef }) {
+  const [content, setContent] = useState('');
+
+  useEffect(() => {
+    const handler = (text) => setContent(text);
+    if (streamRef.current) {
+      streamRef.current.subscribe(handler);
+    }
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.unsubscribe(handler);
+      }
+    };
+  }, [streamRef]);
+
+  if (!content) return null;
+  return <BotMarkdown content={content} />;
+}
+
+function createStreamEmitter() {
+  let listener = null;
+  return {
+    subscribe(fn) { listener = fn; },
+    unsubscribe() { listener = null; },
+    emit(content) { listener?.(content); },
+  };
+}
+
 function ChatInner() {
   const { i18n } = useTranslation();
-  const { isHealthy } = useHealthCheck(30000);
-  const { sessionId, saveSession } = useChatSession();
-  const sessionRef = useRef(sessionId);
+  const { status, sendMessage } = useChatWebSocket();
   const processingRef = useRef(false);
   const phraseIndexRef = useRef(Math.floor(Math.random() * WELCOME_PHRASES.en.length));
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
   const tooltipText = WELCOME_PHRASES[lang][phraseIndexRef.current];
 
-  console.log('[ChatInner] isHealthy:', isHealthy, '| lang:', lang);
+  const statusRef = useRef(status);
+  statusRef.current = status;
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
+  const langRef = useRef(lang);
+  langRef.current = lang;
 
-  useEffect(() => { sessionRef.current = sessionId; }, [sessionId]);
+  const streamEmitterRef = useRef(createStreamEmitter());
+  const injectMessageRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const { tool, args } = e.detail;
+      executeTool(tool, args, injectMessageRef.current);
+    };
+    window.addEventListener('dev-tool-execute', handler);
+    return () => window.removeEventListener('dev-tool-execute', handler);
+  }, []);
 
   const handleUserMessage = useCallback(async (params) => {
+    injectMessageRef.current = params.injectMessage;
     const text = params.userInput;
+
     if (processingRef.current) {
       await params.injectMessage(
-        lang === 'es'
+        langRef.current === 'es'
           ? 'Por favor espera, estoy procesando tu mensaje anterior...'
           : 'Please wait, I\'m still processing your previous message...'
       );
       return;
     }
-    processingRef.current = true;
-    try {
-      const language = i18n.language.startsWith('es') ? 'es' : 'en';
-      const response = await apiSendMessage(text, sessionRef.current || null, language);
-      if (!sessionRef.current && response.session_id) {
-        saveSession(response.session_id);
-        sessionRef.current = response.session_id;
-      }
-      await params.injectMessage(<BotMarkdown content={response.response} />);
-    } catch (error) {
-      const msg = error.code === 'rate_limit_exceeded'
-        ? `Too many requests. Please wait ${error.retryAfter || 30} seconds.`
-        : (error.message || 'Sorry, something went wrong. Please try again.');
-      await params.injectMessage(msg);
-    } finally {
-      processingRef.current = false;
+
+    if (statusRef.current !== 'connected') {
+      await params.injectMessage(
+        langRef.current === 'es'
+          ? 'Conectando al servidor... intenta de nuevo en un momento.'
+          : 'Connecting to server... try again in a moment.'
+      );
+      return;
     }
-  }, [i18n.language, saveSession, lang]);
+
+    processingRef.current = true;
+    const language = langRef.current;
+
+    const emitter = createStreamEmitter();
+    streamEmitterRef.current = emitter;
+    await params.injectMessage(<StreamingBubble streamRef={{ current: emitter }} />);
+
+    await new Promise((resolve) => {
+      sendMessageRef.current(text, language, {
+        onChunk: (fullContent) => {
+          emitter.emit(fullContent);
+        },
+        onDone: (fullContent) => {
+          emitter.emit(fullContent);
+          processingRef.current = false;
+          resolve();
+        },
+        onError: (message, retryAfter) => {
+          const msg = retryAfter
+            ? (langRef.current === 'es'
+              ? `Demasiadas solicitudes. Espera ${retryAfter} segundos.`
+              : `Too many requests. Please wait ${retryAfter} seconds.`)
+            : message;
+          emitter.emit(msg);
+          processingRef.current = false;
+          resolve();
+        },
+      });
+    });
+  }, []);
+
+  const handleUserMessageRef = useRef(handleUserMessage);
+  handleUserMessageRef.current = handleUserMessage;
 
   const flow = useMemo(() => ({
     start: {
-      message: WELCOME_MESSAGES[lang],
+      message: async (params) => {
+        injectMessageRef.current = params.injectMessage;
+        await params.injectMessage(WELCOME_MESSAGES[lang]);
+      },
       options: WELCOME_SUGGESTIONS[lang],
       path: 'loop',
     },
     loop: {
       message: async (params) => {
-        await handleUserMessage(params);
+        await handleUserMessageRef.current(params);
       },
       path: 'loop',
     },
-  }), [lang, handleUserMessage]);
+  }), [lang]);
 
   const settings = useMemo(() => ({
     general: {
@@ -165,13 +234,13 @@ function ChatInner() {
     },
     userBubble: { showAvatar: false },
     chatInput: {
-      disabled: !isHealthy,
+      disabled: false,
       enabledPlaceholderText: lang === 'es' ? 'Escribe tu mensaje...' : 'Type your message...',
-      disabledPlaceholderText: lang === 'es' ? 'Chat no disponible - intenta más tarde' : 'Chat unavailable - try again later',
+      disabledPlaceholderText: lang === 'es' ? 'Conectando...' : 'Connecting...',
       blockSpam: true,
       sendOptionOutput: true,
     },
-  }), [isHealthy, tooltipText, lang]);
+  }), [tooltipText, lang]);
 
   const styles = useMemo(() => ({
     chatWindowStyle: {
