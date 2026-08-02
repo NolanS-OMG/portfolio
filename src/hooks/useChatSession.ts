@@ -13,9 +13,9 @@ interface UseChatSessionReturn {
  */
 export function useChatSession(): UseChatSessionReturn {
   const [sessionId, setSessionId] = useState<string | null>(() => {
-    // Initialize from localStorage
     try {
-      return localStorage.getItem(SESSION_KEY);
+      const stored = localStorage.getItem(SESSION_KEY);
+      return stored && stored.trim().length > 0 ? stored.trim() : null;
     } catch (error) {
       console.error('Failed to read session from localStorage:', error);
       return null;
@@ -23,9 +23,10 @@ export function useChatSession(): UseChatSessionReturn {
   });
 
   const saveSession = (id: string) => {
+    if (!id || id.trim().length === 0) return;
     try {
-      localStorage.setItem(SESSION_KEY, id);
-      setSessionId(id);
+      localStorage.setItem(SESSION_KEY, id.trim());
+      setSessionId(id.trim());
     } catch (error) {
       console.error('Failed to save session to localStorage:', error);
     }
