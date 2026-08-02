@@ -1,0 +1,265 @@
+/* Custom styles for react-chatbotify to match dark theme + green gradient */
+
+/* Override default chatbot styles */
+:root {
+  --chat-primary-color: #10b981;
+  --chat-secondary-color: #111827;
+  --chat-background: #1f2937;
+  --chat-border: #374151;
+}
+
+/* Chat window container */
+.rcb-chat-window {
+  background: var(--chat-background) !important;
+  border: 1px solid var(--chat-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Chat header */
+.rcb-chat-header {
+  background: var(--chat-secondary-color) !important;
+  border-bottom: 1px solid var(--chat-border) !important;
+  padding: 16px !important;
+}
+
+.rcb-chat-header-text {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Chat body */
+.rcb-chat-body {
+  background: var(--chat-background) !important;
+  padding: 16px !important;
+}
+
+/* Bot messages */
+.rcb-bot-message {
+  background: var(--chat-secondary-color) !important;
+  color: white !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 12px !important;
+  border: 1px solid var(--chat-border) !important;
+}
+
+/* User messages */
+.rcb-user-message {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 12px !important;
+  margin-left: auto !important;
+}
+
+/* Input area */
+.rcb-chat-input-container {
+  background: var(--chat-secondary-color) !important;
+  border-top: 1px solid var(--chat-border) !important;
+  padding: 12px !important;
+}
+
+.rcb-chat-input {
+  background: var(--chat-background) !important;
+  border: 1px solid var(--chat-border) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+}
+
+.rcb-chat-input:focus {
+  outline: none !important;
+  border-color: var(--chat-primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+.rcb-chat-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Send button */
+.rcb-send-button {
+  background: var(--chat-primary-color) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.rcb-send-button:hover {
+  background: #059669 !important;
+  transform: translateY(-1px) !important;
+}
+
+.rcb-send-button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Chat button (floating bubble) */
+.rcb-chat-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 24px !important;
+}
+
+.rcb-chat-button:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Footer */
+.rcb-chat-footer {
+  background: var(--chat-secondary-color) !important;
+  border-top: 1px solid var(--chat-border) !important;
+  padding: 8px 16px !important;
+  color: #9ca3af !important;
+  font-size: 11px !important;
+}
+
+/* Scrollbar customization */
+.rcb-chat-body::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.rcb-chat-body::-webkit-scrollbar-track {
+  background: var(--chat-background) !important;
+}
+
+.rcb-chat-body::-webkit-scrollbar-thumb {
+  background: var(--chat-border) !important;
+  border-radius: 3px !important;
+}
+
+.rcb-chat-body::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-primary-color) !important;
+}
+
+/* Avatar styling */
+.rcb-bot-avatar img,
+.rcb-user-avatar img {
+  border-radius: 50% !important;
+  border: 2px solid var(--chat-border) !important;
+}
+
+/* Typing indicator */
+.rcb-typing-indicator {
+  display: flex !important;
+  gap: 4px !important;
+  padding: 12px !important;
+}
+
+.rcb-typing-indicator span {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: var(--chat-primary-color) !important;
+  animation: typing-bounce 1.4s infinite ease-in-out !important;
+}
+
+.rcb-typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s !important;
+}
+
+.rcb-typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s !important;
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8) !important;
+    opacity: 0.5 !important;
+  }
+  40% {
+    transform: scale(1.2) !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .rcb-chat-window {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .rcb-chat-button {
+    width: 60px !important;
+    height: 60px !important;
+    bottom: 20px !important;
+    right: 20px !important;
+  }
+
+  .rcb-chat-body {
+    padding: 12px !important;
+  }
+
+  .rcb-bot-message,
+  .rcb-user-message {
+    max-width: 85% !important;
+  }
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+  .rcb-chat-window {
+    background: var(--chat-background) !important;
+  }
+}
+
+/* Animations */
+.rcb-chat-window {
+  animation: slide-up 0.3s ease-out !important;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0 !important;
+    transform: translateY(20px) !important;
+  }
+  to {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+}
+
+/* Quick reply buttons (suggestions) */
+.rcb-quick-reply-button {
+  background: var(--chat-secondary-color) !important;
+  color: white !important;
+  border: 1px solid var(--chat-primary-color) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  margin: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: all 0.2s !important;
+}
+
+.rcb-quick-reply-button:hover {
+  background: var(--chat-primary-color) !important;
+  transform: translateY(-1px) !important;
+}
