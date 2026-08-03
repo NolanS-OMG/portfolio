@@ -1,13 +1,20 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 const API_KEY = import.meta.env.VITE_API_KEY || '';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+
+interface ToolCallData {
+  tool: string;
+  args: Record<string, unknown>;
+}
 
 interface StreamCallbacks {
   onChunk: (fullContent: string) => void;
   onDone: (fullContent: string) => void;
   onError: (message: string, retryAfter?: number) => void;
+  onToolCall?: (data: ToolCallData) => void;
 }
 
 interface UseChatWebSocketReturn {
@@ -34,9 +41,9 @@ export function useChatWebSocket(): UseChatWebSocketReturn {
 
     setStatus('connecting');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/chat?api_key=${API_KEY}`;
+    const url = new URL(API_URL || window.location.origin);
+    const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${url.host}/ws/chat?api_key=${API_KEY}`;
 
     const ws = new WebSocket(wsUrl);
 
@@ -60,6 +67,13 @@ export function useChatWebSocket(): UseChatWebSocketReturn {
           break;
 
         case 'tool_call':
+          if (callbacksRef.current?.onToolCall) {
+            callbacksRef.current.onToolCall({
+              tool: data.tool || data.function?.name || '',
+              args: data.args || data.function?.arguments || {},
+            });
+          }
+          break;
         case 'tool_result':
           break;
 
