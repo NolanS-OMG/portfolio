@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [lan, setLan] = useState("en");
+  const [lan, setLan] = useState(i18n.language.startsWith('es') ? 'es' : 'en');
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
