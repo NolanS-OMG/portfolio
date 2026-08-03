@@ -1,18 +1,23 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
-import ChatBot, { ChatBotProvider } from 'react-chatbotify';
+import ChatBot, { ChatBotProvider, useSettings, useTextArea } from 'react-chatbotify';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import { useChatWebSocket } from '../hooks/useChatWebSocket';
 import { executeTool } from '../tools/index';
 
-const WELCOME_PHRASES = {
-  en: ['Welcome!', 'Hi there!', 'Need help?', 'Ask me anything!', 'Hello!'],
-  es: ['¡Bienvenido!', '¡Hola!', '¿Necesitas ayuda?', '¡Pregúntame!', '¡Hey!'],
-};
-
 const WELCOME_MESSAGES = {
   en: "Hi! I'm Nolan's AI assistant. How can I help you?",
   es: '¡Hola! Soy el asistente AI de Nolan. ¿En qué puedo ayudarte?',
+};
+
+const HEADER_TITLES = {
+  en: "Nolan's AI Assistant",
+  es: 'Asistente AI de Nolan',
+};
+
+const TOOLTIP_PHRASES = {
+  en: ['Welcome!', 'Hi there!', 'Need help?', 'Ask me anything!', 'Hello!'],
+  es: ['¡Bienvenido!', '¡Hola!', '¿Necesitas ayuda?', '¡Pregúntame!', '¡Hey!'],
 };
 
 const WELCOME_SUGGESTIONS = {
@@ -29,6 +34,26 @@ const WELCOME_SUGGESTIONS = {
     '¿Cómo puedo contactarlo?',
   ],
 };
+
+const BACKEND_TOOL_MAP = {
+  mostrar_proyectos: 'show_projects',
+  mostrar_info_de_contacto: 'copy_contact',
+  navegar_a: 'navigate_to',
+  descargar_cv: 'download_cv',
+  enviar_mensaje: 'send_message',
+  compatibilidad: 'compatibility_score',
+};
+
+function resolveToolCall(data) {
+  if (data.tool === 'dispatch_frontend') {
+    const action = data.args?.action || '';
+    return {
+      tool: BACKEND_TOOL_MAP[action] || action,
+      args: data.args?.args || {},
+    };
+  }
+  return { tool: BACKEND_TOOL_MAP[data.tool] || data.tool, args: data.args || {} };
+}
 
 function BotMarkdown({ content }) {
   const processed = content.replace(/\n/g, '  \n');
@@ -84,6 +109,52 @@ function StreamingBubble({ streamRef }) {
   return <BotMarkdown content={content} />;
 }
 
+function WelcomeMessage() {
+  const { i18n } = useTranslation();
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  return <span>{WELCOME_MESSAGES[lang]}</span>;
+}
+
+function WelcomeSuggestions() {
+  const { i18n } = useTranslation();
+  const { setTextAreaValue } = useTextArea();
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const suggestions = WELCOME_SUGGESTIONS[lang];
+
+  const handleClick = (text) => {
+    setTextAreaValue(text);
+    setTimeout(() => {
+      const sendBtn = document.querySelector('.rcb-send-button');
+      if (sendBtn) sendBtn.click();
+    }, 100);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '4px 0' }}>
+      {suggestions.map((text) => (
+        <button
+          key={text}
+          onClick={() => handleClick(text)}
+          style={{
+            background: 'transparent',
+            color: '#10b981',
+            border: '1px solid #10b981',
+            borderRadius: '18px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => { e.target.style.background = '#10b981'; e.target.style.color = '#fff'; }}
+          onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#10b981'; }}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function createStreamEmitter() {
   let listener = null;
   return {
@@ -96,25 +167,40 @@ function createStreamEmitter() {
 function ChatInner() {
   const { i18n } = useTranslation();
   const { status, sendMessage } = useChatWebSocket();
+  const { updateSettings } = useSettings();
   const processingRef = useRef(false);
-  const phraseIndexRef = useRef(Math.floor(Math.random() * WELCOME_PHRASES.en.length));
+  const phraseIndexRef = useRef(Math.floor(Math.random() * TOOLTIP_PHRASES.en.length));
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
-  const tooltipText = WELCOME_PHRASES[lang][phraseIndexRef.current];
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
-  const toggleExpand = useCallback(() => {
-    setExpanded((prev) => {
-      const next = !prev;
-      requestAnimationFrame(() => {
-        const win = document.querySelector('.rcb-chat-window');
-        if (win) {
-          win.style.width = next ? '480px' : '360px';
-          win.style.height = next ? '620px' : '480px';
-          win.style.transition = 'width 0.3s ease, height 0.3s ease';
-        }
-      });
-      return next;
+  useEffect(() => {
+    updateSettings({
+      header: { title: HEADER_TITLES[lang] },
+      tooltip: { text: TOOLTIP_PHRASES[lang][phraseIndexRef.current] },
+      chatInput: {
+        enabledPlaceholderText: lang === 'es' ? 'Escribe tu mensaje...' : 'Type your message...',
+        disabledPlaceholderText: lang === 'es' ? 'Conectando...' : 'Connecting...',
+      },
     });
+  }, [lang]);
+
+  const expandedRef = useRef(true);
+  const toggleExpand = useCallback(() => {
+    expandedRef.current = !expandedRef.current;
+    const next = expandedRef.current;
+    setExpanded(next);
+    const win = document.querySelector('.rcb-chat-window');
+    if (win) {
+      win.style.width = next ? '480px' : '360px';
+      win.style.height = next ? '620px' : '480px';
+      win.style.transition = 'width 0.3s ease, height 0.3s ease';
+    }
+    const svg = document.querySelector('#rcb-expand-icon');
+    if (svg) {
+      svg.innerHTML = next
+        ? '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>'
+        : '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
+    }
   }, []);
 
   const statusRef = useRef(status);
@@ -165,10 +251,14 @@ function ChatInner() {
     streamEmitterRef.current = emitter;
     await params.injectMessage(<StreamingBubble streamRef={{ current: emitter }} />);
 
+    const pendingTools = [];
     await new Promise((resolve) => {
       sendMessageRef.current(text, language, {
         onChunk: (fullContent) => {
           emitter.emit(fullContent);
+        },
+        onToolCall: (rawData) => {
+          pendingTools.push(resolveToolCall(rawData));
         },
         onDone: (fullContent) => {
           emitter.emit(fullContent);
@@ -187,6 +277,10 @@ function ChatInner() {
         },
       });
     });
+
+    for (const { tool, args } of pendingTools) {
+      executeTool(tool, args, params.injectMessage, langRef.current);
+    }
   }, []);
 
   const handleUserMessageRef = useRef(handleUserMessage);
@@ -196,9 +290,9 @@ function ChatInner() {
     start: {
       message: async (params) => {
         injectMessageRef.current = params.injectMessage;
-        return WELCOME_MESSAGES[langRef.current];
+        await params.injectMessage(<WelcomeMessage />);
+        await params.injectMessage(<WelcomeSuggestions />);
       },
-      options: () => WELCOME_SUGGESTIONS[langRef.current],
       path: 'loop',
     },
     loop: {
@@ -220,23 +314,24 @@ function ChatInner() {
       showInputRow: true,
     },
     tooltip: {
-      mode: 'ALWAYS',
-      text: tooltipText,
+      mode: 'CLOSE',
+      text: TOOLTIP_PHRASES[lang][phraseIndexRef.current],
     },
     header: {
-      title: "Nolan's AI Assistant",
+      title: HEADER_TITLES[lang],
       showAvatar: false,
       buttons: [
         <button
           key="expand-btn"
           onClick={toggleExpand}
-          aria-label={expanded ? 'Shrink chat' : 'Expand chat'}
+          aria-label="Toggle chat size"
+          className="rcb-expand-btn"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '24px',
-            height: '24px',
+            width: '28px',
+            height: '28px',
             backgroundColor: 'transparent',
             border: 'none',
             cursor: 'pointer',
@@ -244,33 +339,22 @@ function ChatInner() {
             padding: 0,
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {expanded ? (
-              <>
-                <polyline points="4 14 10 14 10 20" />
-                <polyline points="20 10 14 10 14 4" />
-                <line x1="14" y1="10" x2="21" y2="3" />
-                <line x1="3" y1="21" x2="10" y2="14" />
-              </>
-            ) : (
-              <>
-                <polyline points="15 3 21 3 21 9" />
-                <polyline points="9 21 3 21 3 15" />
-                <line x1="21" y1="3" x2="14" y2="10" />
-                <line x1="3" y1="21" x2="10" y2="14" />
-              </>
-            )}
+          <svg id="rcb-expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4 14 10 14 10 20" />
+            <polyline points="20 10 14 10 14 4" />
+            <line x1="14" y1="10" x2="21" y2="3" />
+            <line x1="3" y1="21" x2="10" y2="14" />
           </svg>
         </button>,
         'close-chat-button',
       ],
     },
     notification: {
-      disabled: false,
-      defaultToggledOn: true,
-      showCount: true,
+      disabled: true,
+      defaultToggledOn: false,
+      showCount: false,
     },
-    audio: { disabled: true },
+    audio: { disabled: true, defaultToggledOn: false },
     voice: { disabled: true },
     emoji: { disabled: true },
     fileAttachment: { disabled: true },
@@ -293,13 +377,13 @@ function ChatInner() {
       blockSpam: true,
       sendOptionOutput: true,
     },
-  }), [tooltipText, lang, expanded, toggleExpand]);
+  }), [expanded, toggleExpand]);
 
   const styles = useMemo(() => ({
     chatWindowStyle: {
       backgroundColor: '#111827',
-      width: '360px',
-      height: '480px',
+      width: '480px',
+      height: '620px',
       borderRadius: '16px',
       overflow: 'hidden',
       transition: 'width 0.3s ease, height 0.3s ease',
@@ -400,20 +484,7 @@ function ChatInner() {
       border: '1px solid #374151',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
     },
-    notificationBadgeStyle: {
-      backgroundColor: '#ef4444',
-      color: '#ffffff',
-      fontSize: '10px',
-      fontWeight: 'bold',
-      width: '18px',
-      height: '18px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      top: '-2px',
-      right: '-2px',
-    },
+    notificationBadgeStyle: { display: 'none' },
     closeChatButtonStyle: {
       backgroundColor: 'transparent',
       borderWidth: '0',
