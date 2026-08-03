@@ -141,6 +141,7 @@
 
 /* Chat button (floating bubble) - perfect circle, image fills entirely */
 .rcb-chat-button {
+  position: relative !important;
   width: 60px !important;
   height: 60px !important;
   border-radius: 50% !important;
@@ -149,7 +150,7 @@
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
   cursor: pointer !important;
   transition: all 0.3s !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .rcb-chat-button:hover {
@@ -163,22 +164,33 @@
   display: none !important;
 }
 
-/* Notification badge - red circle */
+/* Notification badge - hidden (default) */
 .rcb-badge {
-  position: absolute !important;
-  top: -2px !important;
-  right: -2px !important;
-  width: 18px !important;
-  height: 18px !important;
-  border-radius: 50% !important;
-  background: #ef4444 !important;
-  color: white !important;
-  font-size: 10px !important;
-  font-weight: bold !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: 2px solid #111827 !important;
+  display: none !important;
+}
+
+/* Red notification dot on chat button - disappears when chat is open */
+.rcb-chat-button::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #111827;
+  animation: dot-pulse 2s infinite;
+  pointer-events: none;
+}
+
+.rcb-window-open .rcb-chat-button::after {
+  display: none;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
 }
 
 /* Footer - hidden */
@@ -284,6 +296,10 @@
   .rcb-user-message {
     max-width: 85% !important;
   }
+
+  .rcb-expand-btn {
+    display: none !important;
+  }
 }
 
 /* Markdown content inside bot messages */
@@ -360,7 +376,12 @@
 
 /* Notification badge (see above for main styling) */
 
-/* Tooltip */
+/* Tooltip - only visible when chat is closed */
+.rcb-window-open .rcb-chat-tooltip,
+.rcb-chat-tooltip.rcb-tooltip-hide {
+  display: none !important;
+}
+
 .rcb-chat-tooltip {
   background: #1f2937 !important;
   color: #f9fafb !important;
@@ -369,4 +390,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   font-size: 13px !important;
   padding: 8px 12px !important;
+  right: 90px !important;
+  bottom: 30px !important;
 }
