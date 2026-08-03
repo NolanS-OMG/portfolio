@@ -6,7 +6,7 @@ import { PiSuitcaseSimpleBold } from "react-icons/pi";
 import { FaCode } from "react-icons/fa";
 import Experience from "./Components/Experience";
 import Projects from "./Components/Projects";
-import ChatWidget from "./components/ChatWidget";
+import ChatWidget from "./Components/ChatWidget";
 import DevToolsPanel from "./tools/components/DevToolsPanel";
 import { useTranslation } from 'react-i18next';
 
